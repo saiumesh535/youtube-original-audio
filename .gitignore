@@ -39,6 +39,7 @@ Desktop.ini
 .claude/
 .windsurf/
 .agent/
+design-system/
 
 # Test / coverage
 coverage/
