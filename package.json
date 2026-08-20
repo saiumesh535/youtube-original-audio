@@ -1,0 +1,25 @@
+{
+  "name": "youtube-original-audio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chromium and Firefox extension that switches YouTube to original audio when it matches your preferred languages.",
+  "type": "module",
+  "packageManager": "pnpm@10.6.5",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "build": "node scripts/build.mjs",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "youtube",
+    "audio",
+    "extension",
+    "firefox",
+    "chrome"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}
