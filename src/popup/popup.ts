@@ -1,4 +1,4 @@
-import { LANGUAGES, type ExtensionConfig } from "../shared/languages.ts";
+import { LANGUAGES, type ExtensionConfig, type LanguageDefinition } from "../shared/languages.ts";
 import {
   STORAGE_ENABLED_KEY,
   STORAGE_PREFERRED_LANGUAGES_KEY,
@@ -26,17 +26,24 @@ function isHTMLParagraphElement(node: HTMLElement): node is HTMLParagraphElement
   return node instanceof HTMLParagraphElement;
 }
 
+function isHTMLSpanElement(node: HTMLElement): node is HTMLSpanElement {
+  return node instanceof HTMLSpanElement;
+}
+
 const enabledInput = requireElement("enabled", isHTMLInputElement);
+const enabledLabel = requireElement("enabled-label", isHTMLSpanElement);
+const languageSearch = requireElement("language-search", isHTMLInputElement);
 const languageList = requireElement("language-list", isHTMLDivElement);
+const languageEmpty = requireElement("language-empty", isHTMLParagraphElement);
 const status = requireElement("status", isHTMLParagraphElement);
 
 let saveTimer: number | undefined;
 
 function selectedLanguageCodes(): string[] {
-  const checked = languageList.querySelectorAll<HTMLInputElement>("input[type='checkbox']:checked");
+  const pressed = languageList.querySelectorAll<HTMLButtonElement>("button.lang-row[aria-pressed='true']");
   const codes: string[] = [];
-  checked.forEach((input) => {
-    codes.push(input.value);
+  pressed.forEach((button) => {
+    codes.push(button.value);
   });
   return codes;
 }
@@ -48,55 +55,94 @@ function currentConfig(): ExtensionConfig {
   };
 }
 
+function syncEnabledLabel(): void {
+  enabledLabel.textContent = enabledInput.checked ? "On" : "Off";
+}
+
 function setStatus(message: string): void {
   status.textContent = message;
   status.classList.toggle("saved", message.length > 0);
 }
 
 async function persist(): Promise<void> {
-  const config = currentConfig();
-  await chrome.storage.sync.set(storagePayloadFromConfig(config));
+  await chrome.storage.sync.set(storagePayloadFromConfig(currentConfig()));
   setStatus("Saved");
   window.clearTimeout(saveTimer);
   saveTimer = window.setTimeout(() => {
     setStatus("");
-  }, 1200);
+  }, 900);
+}
+
+function languageMatches(language: LanguageDefinition, query: string): boolean {
+  if (query.length === 0) {
+    return true;
+  }
+  const haystack = [language.code, language.name, ...language.aliases].join(" ").toLowerCase();
+  return haystack.includes(query);
+}
+
+function applySearchFilter(): void {
+  const query = languageSearch.value.trim().toLowerCase();
+  const rows = languageList.querySelectorAll<HTMLButtonElement>("button.lang-row");
+  let visible = 0;
+  rows.forEach((row) => {
+    const language = LANGUAGES.find((item) => item.code === row.value);
+    const show = language !== undefined && languageMatches(language, query);
+    row.hidden = !show;
+    if (show) {
+      visible += 1;
+    }
+  });
+  languageEmpty.hidden = visible > 0;
 }
 
 function renderLanguages(preferredLanguages: ReadonlyArray<string>): void {
   languageList.replaceChildren();
-  for (const language of LANGUAGES) {
-    const label = document.createElement("label");
-    label.className = "language-item";
+  const selected = LANGUAGES.filter((language) => preferredLanguages.includes(language.code));
+  const rest = LANGUAGES.filter((language) => !preferredLanguages.includes(language.code));
+  const ordered = [...selected, ...rest];
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = language.code;
-    checkbox.checked = preferredLanguages.includes(language.code);
-    checkbox.addEventListener("change", () => {
+  for (const language of ordered) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "lang-row";
+    button.value = language.code;
+    button.setAttribute("role", "listitem");
+    button.setAttribute("aria-pressed", preferredLanguages.includes(language.code) ? "true" : "false");
+
+    const name = document.createElement("span");
+    name.textContent = language.name;
+
+    const dot = document.createElement("span");
+    dot.className = "lang-dot";
+    dot.setAttribute("aria-hidden", "true");
+
+    button.append(name, dot);
+    button.addEventListener("click", () => {
+      const next = button.getAttribute("aria-pressed") !== "true";
+      button.setAttribute("aria-pressed", next ? "true" : "false");
       void persist();
     });
-
-    const text = document.createElement("span");
-    text.textContent = language.name;
-
-    label.append(checkbox, text);
-    languageList.append(label);
+    languageList.append(button);
   }
+  applySearchFilter();
 }
 
 async function init(): Promise<void> {
-  const raw = await chrome.storage.sync.get([
-    STORAGE_ENABLED_KEY,
-    STORAGE_PREFERRED_LANGUAGES_KEY,
-  ]);
+  const raw = await chrome.storage.sync.get([STORAGE_ENABLED_KEY, STORAGE_PREFERRED_LANGUAGES_KEY]);
   const config = configFromStorage(raw);
   enabledInput.checked = config.enabled;
+  syncEnabledLabel();
   renderLanguages(config.preferredLanguages);
 
   enabledInput.addEventListener("change", () => {
+    syncEnabledLabel();
     void persist();
   });
+  languageSearch.addEventListener("input", () => {
+    applySearchFilter();
+  });
+  languageSearch.focus();
 }
 
 void init();

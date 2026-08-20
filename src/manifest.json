@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Original Audio",
-  "version": "1.0.5",
+  "version": "1.2.2",
   "description": "Automatically switch YouTube videos to the original audio track when it matches your preferred languages.",
   "permissions": ["storage"],
   "host_permissions": [

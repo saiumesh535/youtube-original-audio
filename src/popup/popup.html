@@ -3,31 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>YouTube Original Audio</title>
+    <title>Original Audio</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main class="panel">
-      <header class="header">
-        <h1>YouTube Original Audio</h1>
-        <p class="subtitle">Prefer original tracks only for languages you choose.</p>
+    <main class="frame">
+      <header class="hero">
+        <p class="eyebrow">YouTube</p>
+        <h1>Original Audio</h1>
+        <p class="lede">Hear the real track when you already speak it.</p>
       </header>
 
-      <label class="toggle-row" for="enabled">
-        <span>Enable extension</span>
-        <input id="enabled" type="checkbox" />
+      <label class="power" for="enabled">
+        <span>
+          <span class="power-kicker">Power</span>
+          <span id="enabled-label" class="power-state">On</span>
+        </span>
+        <span class="switch">
+          <input id="enabled" type="checkbox" role="switch" />
+          <span class="switch-ui" aria-hidden="true"></span>
+        </span>
       </label>
 
-      <section class="languages" aria-labelledby="languages-heading">
-        <h2 id="languages-heading">Preferred original languages</h2>
-        <p class="hint">
-          Switch to original only when the video’s original language is checked (for example
-          <strong>Hindi original</strong>).
-        </p>
-        <div id="language-list" class="language-list"></div>
+      <section class="langs" aria-labelledby="languages-heading">
+        <div class="langs-head">
+          <h2 id="languages-heading">Languages</h2>
+        </div>
+        <label class="search" for="language-search">
+          <span class="visually-hidden">Search languages</span>
+          <input
+            id="language-search"
+            type="search"
+            placeholder="Find a language"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </label>
+        <div id="language-list" class="lang-list" role="list"></div>
+        <p id="language-empty" class="lang-empty" hidden>No matches</p>
       </section>
 
-      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <footer class="colophon">
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <p>Original only</p>
+      </footer>
     </main>
     <script src="popup.js"></script>
   </body>

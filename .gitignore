@@ -1,6 +1,45 @@
+# Dependencies
 node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build output
 dist/
 dist-types/
-.DS_Store
+*.tsbuildinfo
+
+# Logs & caches
 *.log
-.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.cache/
+tmp/
+temp/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors / IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# Local AI assistant tooling (UI/UX Pro Max, Cursor skills, etc.)
+.cursor/
+.claude/
+.windsurf/
+.agent/
+
+# Test / coverage
+coverage/
+.nyc_output/
