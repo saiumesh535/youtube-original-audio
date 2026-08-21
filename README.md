@@ -22,17 +22,19 @@ No dubbed English on a Hindi video. No surprise Hindi on an English original you
 
 ## Install
 
+Grab the zip from [Releases](https://github.com/saiumesh535/youtube-original-audio/releases). Unzip it, then load that folder as an unpacked extension.
+
+- **Chrome / Edge / Brave:** `chrome://extensions` → Developer mode → Load unpacked
+- **Firefox:** `about:debugging` → This Firefox → Load Temporary Add-on → pick `manifest.json`
+
+Or build it yourself:
+
 ```bash
 pnpm install
 pnpm build
 ```
 
-Load **`dist/`** as an unpacked extension.
-
-- **Chrome / Edge / Brave:** `chrome://extensions` → Developer mode → Load unpacked → `dist`
-- **Firefox:** `about:debugging` → This Firefox → Load Temporary Add-on → `dist/manifest.json`
-
-Reload the extension after each build, then refresh YouTube.
+Load **`dist/`**. Reload the extension after each build, then refresh YouTube.
 
 ## Use
 
