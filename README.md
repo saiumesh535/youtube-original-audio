@@ -2,7 +2,7 @@
 
 YouTube decided you wanted a robot voice.
 
-A Hindi video starts in English. A Tamil video too. You open settings, click Audio track, pick **Hindi original**, and next video it’s back. There is no real off switch for auto-dub.
+A Hindi video starts in English. A Telugu video too. You open settings, click Audio track, pick **Hindi original**, and next video it’s back. There is no real off switch for auto-dub.
 
 This extension flips it back to the original track when that language is one you actually speak.
 
@@ -10,7 +10,7 @@ This extension flips it back to the original track when that language is one you
 
 ## The problem
 
-YouTube auto-dubs videos into your interface language. The original is still there — labeled `Hindi original`, `Tamil original`, and so on — but it is not the default. You have to hunt for it on every video.
+YouTube auto-dubs videos into your interface language. The original is still there — labeled `Hindi original`, `Telugu original`, and so on — but it is not the default. You have to hunt for it on every video.
 
 If you understand the original, the dub is worse: delayed, flat, and often wrong.
 

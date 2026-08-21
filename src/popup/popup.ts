@@ -1,4 +1,5 @@
 import { LANGUAGES, type ExtensionConfig, type LanguageDefinition } from "../shared/languages.ts";
+import { readExtensionStorage, writeExtensionStorage } from "../shared/extension-api.ts";
 import {
   STORAGE_ENABLED_KEY,
   STORAGE_PREFERRED_LANGUAGES_KEY,
@@ -65,7 +66,7 @@ function setStatus(message: string): void {
 }
 
 async function persist(): Promise<void> {
-  await chrome.storage.sync.set(storagePayloadFromConfig(currentConfig()));
+  await writeExtensionStorage(storagePayloadFromConfig(currentConfig()));
   setStatus("Saved");
   window.clearTimeout(saveTimer);
   saveTimer = window.setTimeout(() => {
@@ -129,7 +130,7 @@ function renderLanguages(preferredLanguages: ReadonlyArray<string>): void {
 }
 
 async function init(): Promise<void> {
-  const raw = await chrome.storage.sync.get([STORAGE_ENABLED_KEY, STORAGE_PREFERRED_LANGUAGES_KEY]);
+  const raw = await readExtensionStorage([STORAGE_ENABLED_KEY, STORAGE_PREFERRED_LANGUAGES_KEY]);
   const config = configFromStorage(raw);
   enabledInput.checked = config.enabled;
   syncEnabledLabel();

@@ -11,9 +11,12 @@ export const ORIGINAL_KEYWORDS: ReadonlyArray<string> = [
   "originalaudio",
   "origineel",
   "orijinal",
+  "оригинал",
   "オリジナル",
   "원본",
   "原始",
+  "मूल",
+  "الأصلي",
 ] as const;
 
 export const LANGUAGES: ReadonlyArray<LanguageDefinition> = [

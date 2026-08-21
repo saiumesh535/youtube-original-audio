@@ -3,6 +3,7 @@ import {
   type ExtensionConfig,
   type JsonMessageCandidate,
 } from "../shared/languages.ts";
+import { getExtensionApi, readExtensionStorage } from "../shared/extension-api.ts";
 import {
   STORAGE_ENABLED_KEY,
   STORAGE_PREFERRED_LANGUAGES_KEY,
@@ -21,7 +22,7 @@ function publishConfig(config: ExtensionConfig): void {
 }
 
 async function loadAndPublish(): Promise<void> {
-  const raw = await chrome.storage.sync.get([
+  const raw = await readExtensionStorage([
     STORAGE_ENABLED_KEY,
     STORAGE_PREFERRED_LANGUAGES_KEY,
   ]);
@@ -47,8 +48,8 @@ window.addEventListener("message", (event: MessageEvent) => {
   void loadAndPublish();
 });
 
-chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName !== "sync") {
+getExtensionApi().storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "sync" && areaName !== "local") {
     return;
   }
   if (

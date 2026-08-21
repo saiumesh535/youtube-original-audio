@@ -39,7 +39,9 @@ export type ChromeApi = {
 
 declare global {
   // eslint-disable-next-line no-var
-  var chrome: ChromeApi;
+  var chrome: ChromeApi | undefined;
+  // eslint-disable-next-line no-var
+  var browser: ChromeApi | undefined;
 }
 
 export {};
