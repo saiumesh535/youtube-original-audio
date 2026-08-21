@@ -12,14 +12,26 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+/* Chromium popup host scrollbar: cannot be themed, only hidden/avoided.
+   See https://stackoverflow.com/questions/46615280
+   Fixed height on html also triggers a phantom scrollbar near the 600px cap. */
+html {
   margin: 0;
+  overflow: hidden;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
-  min-width: 300px;
-  max-width: 320px;
+  margin: 0;
+  overflow: hidden;
+  width: 300px;
+  max-height: 580px;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
@@ -27,12 +39,17 @@ body {
 }
 
 .frame {
-  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  max-height: 580px;
+  padding: 18px 16px 14px;
+  overflow: hidden;
 }
 
 .hero {
   display: grid;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .eyebrow {
@@ -64,7 +81,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 20px 0 0;
+  flex-shrink: 0;
+  margin: 16px 0 0;
   padding: 12px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -139,7 +157,11 @@ body {
 }
 
 .langs {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 16px;
 }
 
 .langs-head {
@@ -191,11 +213,62 @@ body {
   appearance: none;
 }
 
+.lang-scroll {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8px;
+  gap: 8px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .lang-list {
-  max-height: 210px;
+  min-height: 0;
+  max-height: 220px;
+  height: 220px;
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #3a3a3a transparent;
+  scrollbar-width: none;
+}
+
+.lang-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.lang-rail {
+  position: relative;
+  margin: 4px 0;
+  border-radius: 999px;
+  background: rgba(243, 236, 227, 0.08);
+}
+
+.lang-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  border-radius: inherit;
+  background: var(--accent);
+  opacity: 0.55;
+  pointer-events: none;
+  transform: translateY(0);
+  transition: opacity 160ms ease;
+}
+
+.lang-scroll:hover .lang-thumb,
+.lang-list:focus-within ~ .lang-rail .lang-thumb {
+  opacity: 0.85;
+}
+
+.lang-rail[data-idle="true"] {
+  opacity: 0;
+}
+
+.lang-rail[data-idle="true"] .lang-thumb {
+  opacity: 0;
 }
 
 .lang-row {
@@ -265,7 +338,8 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 16px;
+  flex-shrink: 0;
+  margin-top: 12px;
 }
 
 .colophon p {

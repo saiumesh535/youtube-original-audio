@@ -35,10 +35,36 @@ const enabledInput = requireElement("enabled", isHTMLInputElement);
 const enabledLabel = requireElement("enabled-label", isHTMLSpanElement);
 const languageSearch = requireElement("language-search", isHTMLInputElement);
 const languageList = requireElement("language-list", isHTMLDivElement);
+const languageThumb = requireElement("language-thumb", isHTMLDivElement);
 const languageEmpty = requireElement("language-empty", isHTMLParagraphElement);
 const status = requireElement("status", isHTMLParagraphElement);
 
+const languageRailElement = languageThumb.parentElement;
+if (languageRailElement === null || !(languageRailElement instanceof HTMLElement)) {
+  throw new Error("Missing language scrollbar rail");
+}
+const languageRail: HTMLElement = languageRailElement;
+
 let saveTimer: number | undefined;
+
+function syncLanguageScrollbar(): void {
+  const view = languageList.clientHeight;
+  const full = languageList.scrollHeight;
+  const railHeight = languageRail.clientHeight;
+
+  if (full <= view + 1 || railHeight <= 0) {
+    languageRail.dataset["idle"] = "true";
+    return;
+  }
+
+  languageRail.dataset["idle"] = "false";
+  const thumbHeight = Math.max(24, (view / full) * railHeight);
+  const maxTop = railHeight - thumbHeight;
+  const maxScroll = full - view;
+  const top = maxScroll <= 0 ? 0 : (languageList.scrollTop / maxScroll) * maxTop;
+  languageThumb.style.height = `${String(thumbHeight)}px`;
+  languageThumb.style.transform = `translateY(${String(top)}px)`;
+}
 
 function selectedLanguageCodes(): string[] {
   const pressed = languageList.querySelectorAll<HTMLButtonElement>("button.lang-row[aria-pressed='true']");
@@ -95,6 +121,7 @@ function applySearchFilter(): void {
     }
   });
   languageEmpty.hidden = visible > 0;
+  syncLanguageScrollbar();
 }
 
 function renderLanguages(preferredLanguages: ReadonlyArray<string>): void {
@@ -127,6 +154,7 @@ function renderLanguages(preferredLanguages: ReadonlyArray<string>): void {
     languageList.append(button);
   }
   applySearchFilter();
+  syncLanguageScrollbar();
 }
 
 async function init(): Promise<void> {
@@ -143,7 +171,14 @@ async function init(): Promise<void> {
   languageSearch.addEventListener("input", () => {
     applySearchFilter();
   });
+  languageList.addEventListener("scroll", () => {
+    syncLanguageScrollbar();
+  });
+  window.addEventListener("resize", () => {
+    syncLanguageScrollbar();
+  });
   languageSearch.focus();
+  syncLanguageScrollbar();
 }
 
 void init();

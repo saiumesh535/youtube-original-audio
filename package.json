@@ -10,6 +10,7 @@
     "build": "node scripts/build.mjs",
     "bundle": "node scripts/pack.mjs",
     "release": "node scripts/release.mjs",
+    "site": "node scripts/site.mjs",
     "clean": "rm -rf dist release"
   },
   "keywords": [
