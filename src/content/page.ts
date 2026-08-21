@@ -1,5 +1,9 @@
+/**
+ * MAIN-world controller. Chromium path matches the last known-good Chrome build
+ * (ytInitialPlayerResponse + observe-only fetch + setAudioTrack). Firefox skips
+ * fetch wrapping and unwraps the player when needed.
+ */
 import {
-  CONFIG_MESSAGE_TYPE,
   DEFAULT_CONFIG,
   isConfigMessage,
   type ExtensionConfig,
@@ -11,27 +15,30 @@ import {
 } from "../shared/player-response.ts";
 import {
   isOriginalDisplayName,
+  isOriginalTrackId,
   trackMatchesPreferredLanguage,
 } from "../shared/track-matching.ts";
 import type {
   AdaptiveAudioTrackInfo,
   AdaptiveFormat,
-  YtMoviePlayer,
   YtPlayerUserSettingsData,
 } from "../shared/youtube-types.ts";
 import { isJsonObject, parseJsonValue } from "../shared/json.ts";
+import { createPageRuntime } from "./runtime.ts";
 
 const AUDIO_SETTING_KEY = "483";
 const YT_PLAYER_USER_SETTINGS_KEY = "yt-player-user-settings";
 const PLAYER_PATH = "/youtubei/v1/player";
 const LOG_PREFIX = "[yt-original-audio]";
 
+const runtime = createPageRuntime();
+
 let config: ExtensionConfig = DEFAULT_CONFIG;
-/** One successful setAudioTrack (or confirmed original) per video. */
 let appliedForVideoKey: string | undefined;
+let adWasShowing = false;
 
 function log(message: string): void {
-  console.debug(`${LOG_PREFIX} ${message}`);
+  console.info(`${LOG_PREFIX} ${message}`);
 }
 
 function currentVideoKey(): string {
@@ -43,13 +50,14 @@ function currentVideoKey(): string {
 }
 
 function patchYtPlayerUserSettings(langId: string): void {
+  const storage = runtime.getLocalStorage();
   const oneMonthMs = 1000 * 60 * 60 * 24 * 30;
   const now = Date.now();
   const nextData: YtPlayerUserSettingsData = {
     [AUDIO_SETTING_KEY]: { stringValue: langId },
   };
 
-  const existingRaw = window.localStorage.getItem(YT_PLAYER_USER_SETTINGS_KEY);
+  const existingRaw = storage.getItem(YT_PLAYER_USER_SETTINGS_KEY);
   if (existingRaw !== null) {
     const existingPayload = parseYtPlayerUserSettings(existingRaw);
     if (existingPayload !== undefined) {
@@ -64,7 +72,7 @@ function patchYtPlayerUserSettings(langId: string): void {
     }
   }
 
-  window.localStorage.setItem(
+  storage.setItem(
     YT_PLAYER_USER_SETTINGS_KEY,
     JSON.stringify({
       creation: now,
@@ -153,7 +161,7 @@ function findPreferredOriginalFromFormats(
   for (const track of unique.values()) {
     const isOriginal =
       track.isAutoDubbed !== true &&
-      (isOriginalDisplayName(track.displayName) || /\.4\b/.test(track.id));
+      (isOriginalDisplayName(track.displayName) || isOriginalTrackId(track.id));
     if (!isOriginal) {
       continue;
     }
@@ -223,7 +231,7 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
-/** Observe only — never rewrite the Response body. */
+/** Observe only — never rewrite the Response body. Chromium only. */
 function installFetchHook(): void {
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
@@ -245,6 +253,7 @@ function installFetchHook(): void {
     }
     return response;
   };
+  log("hooked fetch");
 }
 
 function readStringProp(value: object, key: string): string | undefined {
@@ -256,9 +265,10 @@ function readStringProp(value: object, key: string): string | undefined {
 }
 
 function extractPlayerTrackName(track: object): string {
-  if ("getLanguageInfo" in track && typeof track.getLanguageInfo === "function") {
+  const unwrapped = runtime.unwrap(track);
+  if ("getLanguageInfo" in unwrapped && typeof unwrapped.getLanguageInfo === "function") {
     try {
-      const info = track.getLanguageInfo() as object;
+      const info = runtime.unwrap(unwrapped.getLanguageInfo() as object);
       const fromGetter =
         "getName" in info && typeof info.getName === "function"
           ? String(info.getName())
@@ -271,27 +281,29 @@ function extractPlayerTrackName(track: object): string {
     }
   }
 
-  for (const value of Object.values(track)) {
+  for (const value of Object.values(unwrapped)) {
     if (typeof value !== "object" || value === null) {
       continue;
     }
-    const name = readStringProp(value, "name") ?? readStringProp(value, "displayName");
+    const inner = runtime.unwrap(value);
+    const name = readStringProp(inner, "name") ?? readStringProp(inner, "displayName");
     if (name !== undefined && name.length > 0) {
       return name;
     }
   }
 
   try {
-    return String(track);
+    return String(unwrapped);
   } catch {
     return "";
   }
 }
 
 function extractPlayerTrackId(track: object): string {
-  if ("getLanguageInfo" in track && typeof track.getLanguageInfo === "function") {
+  const unwrapped = runtime.unwrap(track);
+  if ("getLanguageInfo" in unwrapped && typeof unwrapped.getLanguageInfo === "function") {
     try {
-      const info = track.getLanguageInfo() as object;
+      const info = runtime.unwrap(unwrapped.getLanguageInfo() as object);
       const fromGetter =
         "getId" in info && typeof info.getId === "function"
           ? String(info.getId())
@@ -303,15 +315,15 @@ function extractPlayerTrackId(track: object): string {
       // continue
     }
   }
-  const direct = readStringProp(track, "id");
+  const direct = readStringProp(unwrapped, "id");
   if (direct !== undefined) {
     return direct;
   }
-  for (const value of Object.values(track)) {
+  for (const value of Object.values(unwrapped)) {
     if (typeof value !== "object" || value === null) {
       continue;
     }
-    const id = readStringProp(value, "id");
+    const id = readStringProp(runtime.unwrap(value), "id");
     if (id !== undefined && id.includes(".")) {
       return id;
     }
@@ -319,27 +331,28 @@ function extractPlayerTrackId(track: object): string {
   return "";
 }
 
-function getMoviePlayer(): YtMoviePlayer | undefined {
-  const element = document.querySelector("#movie_player");
-  if (element === null) {
-    return undefined;
+function syncAdState(): void {
+  const adNow = runtime.isAdShowing();
+  if (adWasShowing && !adNow) {
+    log("ad ended — reapplying original audio");
+    appliedForVideoKey = undefined;
+    scheduleFallbackPasses();
   }
-  const candidate = element as Element & Partial<YtMoviePlayer>;
-  if (
-    typeof candidate.getAvailableAudioTracks !== "function" ||
-    typeof candidate.setAudioTrack !== "function"
-  ) {
-    return undefined;
-  }
-  return candidate as YtMoviePlayer;
+  adWasShowing = adNow;
 }
 
 /**
- * Same strategy that worked before the “make it faster” changes:
+ * Same strategy as the last known-good Chrome build:
  * wait until the player exposes tracks, call setAudioTrack once, stop.
  */
 function applyPlayerApiFallbackOnce(): void {
   if (!config.enabled || config.preferredLanguages.length === 0) {
+    return;
+  }
+
+  runtime.observePlayerClass(syncAdState);
+  syncAdState();
+  if (runtime.isAdShowing()) {
     return;
   }
 
@@ -348,7 +361,7 @@ function applyPlayerApiFallbackOnce(): void {
     return;
   }
 
-  const player = getMoviePlayer();
+  const player = runtime.getMoviePlayer();
   if (player === undefined) {
     return;
   }
@@ -386,8 +399,9 @@ function applyPlayerApiFallbackOnce(): void {
   }
 
   for (const track of tracks) {
-    const name = extractPlayerTrackName(track);
-    const id = extractPlayerTrackId(track);
+    const unwrappedTrack = runtime.unwrap(track);
+    const name = extractPlayerTrackName(unwrappedTrack);
+    const id = extractPlayerTrackId(unwrappedTrack);
     if (!isOriginalDisplayName(name)) {
       continue;
     }
@@ -401,7 +415,7 @@ function applyPlayerApiFallbackOnce(): void {
     }
     try {
       appliedForVideoKey = videoKey;
-      player.setAudioTrack(track);
+      player.setAudioTrack(unwrappedTrack);
       if (id.length > 0) {
         patchYtPlayerUserSettings(id);
       }
@@ -415,7 +429,6 @@ function applyPlayerApiFallbackOnce(): void {
 }
 
 function scheduleFallbackPasses(): void {
-  // Restored working cadence (slightly earlier first try than the original 400ms).
   const delays = [300, 800, 1500, 2500];
   for (const delay of delays) {
     window.setTimeout(() => {
@@ -427,11 +440,13 @@ function scheduleFallbackPasses(): void {
 function installNavigationListeners(): void {
   document.addEventListener("yt-navigate-finish", () => {
     appliedForVideoKey = undefined;
+    adWasShowing = runtime.isAdShowing();
     scheduleFallbackPasses();
   });
 }
 
 function installConfigListener(): void {
+  // event.source === window is the known-good Chromium bridge↔page filter.
   window.addEventListener("message", (event: MessageEvent) => {
     if (event.source !== window) {
       return;
@@ -459,7 +474,9 @@ function installConfigListener(): void {
 
 installConfigListener();
 installYtInitialPlayerResponseHook();
-installFetchHook();
+if (runtime.shouldHookFetch) {
+  installFetchHook();
+}
 installNavigationListeners();
 scheduleFallbackPasses();
-log("page script ready");
+log(`page script ready (${runtime.id})`);
