@@ -28,11 +28,17 @@ jobs:
             echo "Tag v$TAG does not match manifest version $VERSION"
             exit 1
           fi
-      - name: Create GitHub Release
+      - name: Publish GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "YouTube Original Audio ${GITHUB_REF_NAME#v}" \
-            --generate-notes \
-            release/youtube-original-audio-*.zip
+          TAG="$GITHUB_REF_NAME"
+          ZIP=(release/youtube-original-audio-*.zip)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${ZIP[@]}" --clobber
+          else
+            gh release create "$TAG" \
+              --title "YouTube Original Audio ${TAG#v}" \
+              --generate-notes \
+              "${ZIP[@]}"
+          fi

@@ -41,3 +41,11 @@ Load **`dist/`**. Reload the extension after each build, then refresh YouTube.
 Open the popup. Turn it on. Search and select languages. Hindi is selected by default.
 
 That’s it. Play a dubbed video and it should land on original.
+
+## Release
+
+```bash
+pnpm release
+```
+
+Reads the version from `src/manifest.json`, builds the zip, tags `vX.Y.Z`, and publishes a GitHub Release. Working tree must be clean, and you need `gh` logged in.
