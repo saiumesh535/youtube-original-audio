@@ -6,6 +6,8 @@ A Hindi video starts in English. A Telugu video too. You open settings, click Au
 
 This extension flips it back to the original track when that language is one you actually speak.
 
+Site: https://saiumesh535.github.io/youtube-original-audio/
+
 ![Popup](docs/popup.png)
 
 ## The problem

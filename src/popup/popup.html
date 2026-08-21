@@ -4,6 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Original Audio</title>
+    <style>
+      /* Inline so it applies before paint; hide unthemeable host scrollbars. */
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      html,
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -39,7 +53,12 @@
             spellcheck="false"
           />
         </label>
-        <div id="language-list" class="lang-list" role="list"></div>
+        <div class="lang-scroll">
+          <div id="language-list" class="lang-list" role="list"></div>
+          <div class="lang-rail" aria-hidden="true">
+            <div id="language-thumb" class="lang-thumb"></div>
+          </div>
+        </div>
         <p id="language-empty" class="lang-empty" hidden>No matches</p>
       </section>
 

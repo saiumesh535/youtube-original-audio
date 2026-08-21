@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YouTube Original Audio</title>
+    <meta
+      name="description"
+      content="A browser extension that switches YouTube back to the original audio track when that language is one you speak."
+    />
+    <meta property="og:title" content="YouTube Original Audio" />
+    <meta
+      property="og:description"
+      content="Stop auto-dub. Prefer Hindi original, Telugu original, and the languages you actually understand."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="popup.png" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Sora:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="top">
+      <a class="brand" href="./">YouTube Original Audio</a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#problem">Problem</a>
+        <a href="#install">Install</a>
+        <a
+          href="https://github.com/saiumesh535/youtube-original-audio"
+          rel="noopener noreferrer"
+          >GitHub</a
+        >
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">Browser extension</p>
+        <h1 id="hero-title">YouTube Original Audio</h1>
+        <p class="lede">
+          YouTube auto-dubs into your interface language. This flips it back to the
+          original when that language is one you actually speak.
+        </p>
+        <div class="cta-row">
+          <a
+            class="btn btn-primary"
+            href="https://github.com/saiumesh535/youtube-original-audio/releases"
+            rel="noopener noreferrer"
+            >Download release</a
+          >
+          <a
+            class="btn btn-ghost"
+            href="https://github.com/saiumesh535/youtube-original-audio"
+            rel="noopener noreferrer"
+            >View source</a
+          >
+        </div>
+        <figure class="hero-visual">
+          <img
+            src="popup.png"
+            width="640"
+            height="720"
+            alt="Extension popup with language search and Hindi selected"
+          />
+        </figure>
+      </section>
+
+      <section class="band" id="problem" aria-labelledby="problem-title">
+        <h2 id="problem-title">The problem</h2>
+        <p>
+          A Hindi video starts in English. A Telugu video too. You open settings,
+          pick <em>Hindi original</em>, and the next video it’s back. There is no
+          real off switch for auto-dub — only a hunt through Audio track on every
+          video.
+        </p>
+      </section>
+
+      <section class="band" id="fix" aria-labelledby="fix-title">
+        <h2 id="fix-title">The fix</h2>
+        <p>
+          Pick the languages you understand. When a video’s original track matches,
+          it switches. When it doesn’t, YouTube is left alone.
+        </p>
+      </section>
+
+      <section class="band" id="install" aria-labelledby="install-title">
+        <h2 id="install-title">Install</h2>
+        <p>
+          Grab the zip from
+          <a
+            href="https://github.com/saiumesh535/youtube-original-audio/releases"
+            rel="noopener noreferrer"
+            >Releases</a
+          >, unzip it, then load that folder as an unpacked extension.
+        </p>
+        <ul class="steps">
+          <li>
+            <strong>Chrome / Edge / Brave</strong> —
+            <code>chrome://extensions</code> → Developer mode → Load unpacked
+          </li>
+          <li>
+            <strong>Firefox</strong> —
+            <code>about:debugging</code> → This Firefox → Load Temporary Add-on →
+            pick <code>manifest.json</code>
+          </li>
+        </ul>
+        <p class="note">
+          Or build with <code>pnpm install && pnpm build</code> and load
+          <code>dist/</code>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <p>
+        <a
+          href="https://github.com/saiumesh535/youtube-original-audio"
+          rel="noopener noreferrer"
+          >saiumesh535/youtube-original-audio</a
+        >
+      </p>
+    </footer>
+  </body>
+</html>
