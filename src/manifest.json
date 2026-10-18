@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Original Audio",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Automatically switch YouTube videos to the original audio track when it matches your preferred languages.",
   "permissions": ["storage"],
   "host_permissions": [
@@ -46,8 +46,11 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "youtube-original-audio@local",
-      "strict_min_version": "128.0"
+      "id": "youtube-original-audio@saiumesh535.github.io",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   }
 }

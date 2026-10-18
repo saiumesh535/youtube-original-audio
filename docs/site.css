@@ -261,6 +261,15 @@ main {
   font-size: 0.95rem;
 }
 
+.band h1 {
+  margin: 0 0 0.75rem;
+  font-family: var(--display);
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
 .foot {
   max-width: 68rem;
   margin: 0 auto;
